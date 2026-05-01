@@ -641,7 +641,9 @@
           "id": "plugin-frontend-design",
           "name": "frontend-design",
           "version": "latest",
-          "links": [],
+          "links": [
+            { "label": "Plugin Store", "url": "https://github.com/anthropics/claude-code" }
+          ],
           "notes": "Official Anthropic plugin — high-quality frontend design generation skill. Install: <code>@claude-plugins-official/frontend-design</code>"
         },
         {
@@ -673,7 +675,9 @@
           "id": "mcp-guesty",
           "name": "Guesty MCP",
           "version": "custom",
-          "links": [],
+          "links": [
+            { "label": "Guesty API Docs", "url": "https://open-api.guesty.com" }
+          ],
           "notes": "Custom local stdio MCP server for Guesty property management. Located at <code>guesty-mcp/index.js</code> in the AI Coworking folder. Exposes 10 tools for listings, reservations, calendars, guests."
         },
         {
@@ -689,7 +693,9 @@
           "id": "mcp-gdrive",
           "name": "Google Drive MCP",
           "version": "latest",
-          "links": [],
+          "links": [
+            { "label": "Google Drive API", "url": "https://developers.google.com/drive/api/guides/about-sdk" }
+          ],
           "notes": "Google Drive file access from Claude Code. Available via claude.ai MCP integration settings. Authenticate with <code>mcp__claude_ai_Google_Drive__authenticate</code>."
         }
       ]
@@ -703,7 +709,9 @@
           "id": "playwriter",
           "name": "Playwriter CLI",
           "version": "latest",
-          "links": [],
+          "links": [
+            { "label": "Playwright Docs", "url": "https://playwright.dev/docs/intro" }
+          ],
           "notes": "Controls your real Chrome browser via Playwright from Claude Code. Hook-driven: start a task with <code>acquirePage()</code>, then use <code>state.page</code>. Ask Luis for exact install command."
         },
         {
@@ -711,7 +719,7 @@
           "name": "pw-demux hooks",
           "version": "latest",
           "links": [],
-          "notes": "Custom hook system at <code>~/tools/pw/hooks/</code>. Three hooks: SessionStart (bootstrap), PreToolUse (inject ownership prelude), PostToolUse (cleanup). Diagnose: <code>bash ~/tools/pw/hooks/doctor.sh</code>"
+          "notes": "Custom hook system. See ~/tools/pw/hooks/ for session-start.sh, pre-playwriter.sh, post-playwriter.sh. Three hooks: SessionStart (bootstrap), PreToolUse (inject ownership prelude), PostToolUse (cleanup). Diagnose: <code>bash ~/tools/pw/hooks/doctor.sh</code>"
         }
       ]
     },
@@ -813,7 +821,7 @@
     <ul class="toc-list" id="toc-list"></ul>
   </nav>
 
-  <main id="main" id="content">
+  <main id="main">
     <!-- Sections rendered by JS -->
   </main>
 </div>
