@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Supastack</title>
+  <style>
+    /* =============================================
+       CSS RESET + BASE
+    ============================================= */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue: #0969da;
+      --blue-light: #dbeafe;
+      --blue-muted: #54aeff;
+      --text: #24292f;
+      --text-muted: #656d76;
+      --bg: #ffffff;
+      --bg-alt: #f6f8fa;
+      --border: #d0d7de;
+      --border-muted: #e8eaed;
+      --sidebar-w: 252px;
+      --header-h: 60px;
+      --font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      --radius: 6px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+      --shadow: 0 3px 10px rgba(0,0,0,.10);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* =============================================
+       LAYOUT
+    ============================================= */
+    #app-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .header-left { display: flex; align-items: center; gap: 12px; }
+
+    .site-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.3px;
+    }
+
+    .site-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .header-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .header-right { display: flex; align-items: center; gap: 12px; }
+
+    .btn-login {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: var(--font);
+      color: var(--bg);
+      background: var(--text);
+      border: 1px solid var(--text);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .btn-login:hover { background: #444c56; border-color: #444c56; text-decoration: none; }
+
+    .btn-login svg { flex-shrink: 0; }
+
+    #layout {
+      display: flex;
+      min-height: calc(100vh - var(--header-h));
+    }
+
+    /* =============================================
+       SIDEBAR
+    ============================================= */
+    #sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      position: sticky;
+      top: var(--header-h);
+      height: calc(100vh - var(--header-h));
+      overflow-y: auto;
+      padding: 20px 0;
+      border-right: 1px solid var(--border);
+      background: var(--bg-alt);
+    }
+
+    .sidebar-heading {
+      padding: 0 16px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    .toc-list { list-style: none; }
+
+    .toc-item a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      font-size: 13px;
+      color: var(--text);
+      border-left: 3px solid transparent;
+      transition: background 0.1s, border-color 0.1s, color 0.1s;
+    }
+
+    .toc-item a:hover {
+      background: var(--blue-light);
+      color: var(--blue);
+      text-decoration: none;
+      border-left-color: var(--blue);
+    }
+
+    .toc-item a.active {
+      background: var(--blue-light);
+      color: var(--blue);
+      border-left-color: var(--blue);
+      font-weight: 600;
+    }
+
+    .toc-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 50%;
+      background: var(--border);
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .toc-item a.active .toc-num,
+    .toc-item a:hover .toc-num {
+      background: var(--blue);
+      color: white;
+    }
+
+    /* =============================================
+       MAIN CONTENT
+    ============================================= */
+    #main {
+      flex: 1;
+      min-width: 0;
+      padding: 32px 40px 64px;
+      max-width: 900px;
+    }
+
+    /* =============================================
+       MOBILE NAV
+    ============================================= */
+    #mobile-nav {
+      display: none;
+      padding: 12px 16px;
+      background: var(--bg-alt);
+      border-bottom: 1px solid var(--border);
+    }
+
+    #mobile-nav-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    #mobile-nav select {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 14px;
+      font-family: var(--font);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* =============================================
+       SECTIONS
+    ============================================= */
+    .stack-section {
+      margin-bottom: 48px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--border-muted);
+    }
+
+    .section-order {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 50%;
+      background: var(--blue);
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      border-left: 4px solid var(--blue);
+      padding-left: 12px;
+    }
+
+    /* =============================================
+       ENTRY TABLE
+    ============================================= */
+    .entries-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .entries-table thead th {
+      padding: 8px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      background: var(--bg-alt);
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    .entry-row:nth-child(odd) { background: var(--bg); }
+    .entry-row:nth-child(even) { background: var(--bg-alt); }
+    .entry-row:hover { background: #eef6ff; }
+
+    .entry-row td {
+      padding: 10px 14px;
+      vertical-align: top;
+      border-bottom: 1px solid var(--border-muted);
+    }
+
+    .entry-row:last-child td { border-bottom: none; }
+
+    .entry-name {
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .entry-version {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      margin-top: 2px;
+    }
+
+    .links-cell { min-width: 140px; }
+
+    .link-badges { display: flex; flex-wrap: wrap; gap: 4px; }
+
+    .link-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--blue);
+      background: var(--blue-light);
+      border: 1px solid #bee3f8;
+      border-radius: 20px;
+      text-decoration: none;
+      transition: background 0.1s, color 0.1s;
+      white-space: nowrap;
+    }
+    .link-badge:hover {
+      background: var(--blue);
+      color: white;
+      border-color: var(--blue);
+      text-decoration: none;
+    }
+
+    .notes-cell { min-width: 200px; }
+
+    .notes-details summary {
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--text-muted);
+      user-select: none;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .notes-details summary::-webkit-details-marker { display: none; }
+
+    .notes-details summary::before {
+      content: "▶";
+      font-size: 9px;
+      transition: transform 0.15s;
+      color: var(--text-muted);
+    }
+
+    .notes-details[open] summary::before { transform: rotate(90deg); }
+
+    .notes-details[open] summary { color: var(--text); margin-bottom: 6px; }
+
+    .notes-content {
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--bg-alt);
+      border: 1px solid var(--border-muted);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+      margin-top: 4px;
+    }
+
+    .notes-content code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 11px;
+      background: var(--border-muted);
+      padding: 1px 4px;
+      border-radius: 3px;
+      color: var(--text);
+    }
+
+    /* =============================================
+       FOOTER
+    ============================================= */
+    #app-footer {
+      margin-top: 64px;
+      padding: 20px 40px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-alt);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    #app-footer a { color: var(--text-muted); }
+    #app-footer a:hover { color: var(--blue); }
+
+    /* =============================================
+       RESPONSIVE
+    ============================================= */
+    @media (max-width: 768px) {
+      #sidebar { display: none; }
+      #mobile-nav { display: block; }
+
+      #main { padding: 20px 16px 48px; }
+
+      #app-header { padding: 0 16px; }
+      .site-subtitle { display: none; }
+
+      .entries-table { font-size: 13px; }
+
+      #app-footer { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- =============================================
+     STACK DATA (edit this JSON to update the page)
+============================================= -->
+<script type="application/json" id="stack-data">
+{
+  "sections": [
+    {
+      "id": "homebrew",
+      "title": "Homebrew",
+      "order": 1,
+      "entries": [
+        {
+          "id": "homebrew",
+          "name": "Homebrew",
+          "version": "latest",
+          "links": [
+            { "label": "Install", "url": "https://brew.sh" },
+            { "label": "Docs", "url": "https://docs.brew.sh" }
+          ],
+          "notes": "The missing package manager for macOS. Install first — everything else depends on it. Run: <code>/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"</code>"
+        }
+      ]
+    },
+    {
+      "id": "terminal",
+      "title": "Terminal",
+      "order": 2,
+      "entries": [
+        {
+          "id": "ghostty",
+          "name": "Ghostty",
+          "version": "latest",
+          "links": [
+            { "label": "Site", "url": "https://ghostty.org" },
+            { "label": "Docs", "url": "https://ghostty.org/docs" }
+          ],
+          "notes": "Fast, native terminal emulator. Primary terminal. Download from the site or: <code>brew install --cask ghostty</code>"
+        },
+        {
+          "id": "iterm2",
+          "name": "iTerm2",
+          "version": "latest",
+          "links": [
+            { "label": "Site", "url": "https://iterm2.com" },
+            { "label": "Docs", "url": "https://iterm2.com/documentation.html" }
+          ],
+          "notes": "Feature-rich macOS terminal. Fallback / secondary terminal. Install: <code>brew install --cask iterm2</code>"
+        }
+      ]
+    },
+    {
+      "id": "runtimes",
+      "title": "Dev Runtimes",
+      "order": 3,
+      "entries": [
+        {
+          "id": "nodejs",
+          "name": "Node.js",
+          "version": "v25.9.0",
+          "links": [
+            { "label": "Site", "url": "https://nodejs.org" },
+            { "label": "Install", "url": "https://nodejs.org/en/download" }
+          ],
+          "notes": "JavaScript runtime — required for Claude Code, MCP servers, and most tooling. Install: <code>brew install node</code>"
+        },
+        {
+          "id": "python",
+          "name": "Python",
+          "version": "3.14",
+          "links": [
+            { "label": "Site", "url": "https://python.org" },
+            { "label": "Downloads", "url": "https://www.python.org/downloads" }
+          ],
+          "notes": "Python interpreter. Install: <code>brew install python@3.14</code>. Use <code>uv</code> for project-level venv management."
+        },
+        {
+          "id": "deno",
+          "name": "Deno",
+          "version": "2.7.9",
+          "links": [
+            { "label": "Site", "url": "https://deno.com" },
+            { "label": "Docs", "url": "https://docs.deno.com" }
+          ],
+          "notes": "Secure TypeScript/JS runtime with built-in tooling. Install: <code>brew install deno</code>"
+        },
+        {
+          "id": "uv",
+          "name": "uv",
+          "version": "latest",
+          "links": [
+            { "label": "Repo", "url": "https://github.com/astral-sh/uv" },
+            { "label": "Docs", "url": "https://docs.astral.sh/uv" }
+          ],
+          "notes": "Extremely fast Python package and project manager (Rust-based). Replaces pip/venv/poetry. Install: <code>brew install uv</code>"
+        }
+      ]
+    },
+    {
+      "id": "cli-tools",
+      "title": "CLI Tools",
+      "order": 4,
+      "entries": [
+        {
+          "id": "gh",
+          "name": "gh (GitHub CLI)",
+          "version": "latest",
+          "links": [
+            { "label": "Site", "url": "https://cli.github.com" },
+            { "label": "Manual", "url": "https://cli.github.com/manual" }
+          ],
+          "notes": "Official GitHub CLI — create repos, PRs, manage Actions, etc. Install: <code>brew install gh</code> then <code>gh auth login</code>"
+        },
+        {
+          "id": "gcloud",
+          "name": "gcloud",
+          "version": "latest",
+          "links": [
+            { "label": "Site", "url": "https://cloud.google.com/sdk" },
+            { "label": "Docs", "url": "https://cloud.google.com/sdk/docs/install" }
+          ],
+          "notes": "Google Cloud SDK CLI. Install: <code>brew install --cask google-cloud-sdk</code> then <code>gcloud auth login</code>"
+        },
+        {
+          "id": "fzf",
+          "name": "fzf",
+          "version": "latest",
+          "links": [
+            { "label": "Repo", "url": "https://github.com/junegunn/fzf" }
+          ],
+          "notes": "Fuzzy finder for shell history, file search, and piped input. Install: <code>brew install fzf</code>"
+        },
+        {
+          "id": "ffmpeg",
+          "name": "ffmpeg",
+          "version": "latest",
+          "links": [
+            { "label": "Site", "url": "https://ffmpeg.org" },
+            { "label": "Repo", "url": "https://github.com/FFmpeg/FFmpeg" }
+          ],
+          "notes": "Audio/video processing toolkit. Required by yt-dlp and Whisper workflows. Install: <code>brew install ffmpeg</code>"
+        },
+        {
+          "id": "yt-dlp",
+          "name": "yt-dlp",
+          "version": "latest",
+          "links": [
+            { "label": "Repo", "url": "https://github.com/yt-dlp/yt-dlp" }
+          ],
+          "notes": "Download video/audio from YouTube and 1000+ sites. Requires ffmpeg. Install: <code>brew install yt-dlp</code>"
+        },
+        {
+          "id": "sqlite",
+          "name": "SQLite",
+          "version": "latest",
+          "links": [
+            { "label": "Site", "url": "https://sqlite.org" }
+          ],
+          "notes": "Lightweight embedded SQL database engine. Often pre-installed on macOS; keep it fresh: <code>brew install sqlite</code>"
+        }
+      ]
+    },
+    {
+      "id": "core-ai",
+      "title": "Core AI Tools",
+      "order": 5,
+      "entries": [
+        {
+          "id": "claude-code",
+          "name": "Claude Code",
+          "version": "v2.1.104",
+          "links": [
+            { "label": "Site", "url": "https://claude.ai/code" },
+            { "label": "Docs", "url": "https://docs.anthropic.com/en/docs/claude-code" }
+          ],
+          "notes": "Anthropic's agentic AI coding CLI. Primary AI assistant. Install: <code>npm install -g @anthropic-ai/claude-code</code>"
+        },
+        {
+          "id": "ollama",
+          "name": "Ollama",
+          "version": "v0.19.0",
+          "links": [
+            { "label": "Site", "url": "https://ollama.com" },
+            { "label": "Docs", "url": "https://github.com/ollama/ollama" }
+          ],
+          "notes": "Run large language models locally. Active model: <code>qwen2.5:14b</code>. Install: <code>brew install ollama</code> then <code>ollama pull qwen2.5:14b</code>"
+        },
+        {
+          "id": "mlx",
+          "name": "MLX / MLX-C",
+          "version": "latest",
+          "links": [
+            { "label": "Repo", "url": "https://github.com/ml-explore/mlx" }
+          ],
+          "notes": "Apple's ML framework optimised for Apple Silicon. C bindings via MLX-C. Install: <code>brew install mlx mlx-c</code>"
+        },
+        {
+          "id": "whisper",
+          "name": "Whisper (whisper-cpp)",
+          "version": "latest",
+          "links": [
+            { "label": "Repo", "url": "https://github.com/ggerganov/whisper.cpp" }
+          ],
+          "notes": "OpenAI Whisper speech-to-text, C++ port optimised for Apple Silicon. Requires ffmpeg. Install: <code>brew install whisper-cpp</code>"
+        },
+        {
+          "id": "ggml",
+          "name": "GGML",
+          "version": "latest",
+          "links": [
+            { "label": "Repo", "url": "https://github.com/ggerganov/ggml" }
+          ],
+          "notes": "Tensor library for ML inference — underpins llama.cpp and whisper.cpp. Install: <code>brew install ggml</code>"
+        }
+      ]
+    },
+    {
+      "id": "plugins",
+      "title": "Claude Code Plugins",
+      "order": 6,
+      "entries": [
+        {
+          "id": "plugin-superpowers",
+          "name": "superpowers",
+          "version": "latest",
+          "links": [
+            { "label": "Repo", "url": "https://github.com/anthropics/claude-code" }
+          ],
+          "notes": "Official Anthropic plugin — adds planning, brainstorm, debugging, and systematic workflow skills. Install via Claude Code plugin manager: <code>@claude-plugins-official/superpowers</code>"
+        },
+        {
+          "id": "plugin-frontend-design",
+          "name": "frontend-design",
+          "version": "latest",
+          "links": [],
+          "notes": "Official Anthropic plugin — high-quality frontend design generation skill. Install: <code>@claude-plugins-official/frontend-design</code>"
+        },
+        {
+          "id": "plugin-claude-mem",
+          "name": "claude-mem",
+          "version": "latest",
+          "links": [
+            { "label": "Repo", "url": "https://github.com/thedotmack/claude-mem" }
+          ],
+          "notes": "Persistent cross-session memory for Claude Code. Enables knowledge graphs, corpus search, timeline, and smart exploration. Install: <code>@thedotmack/claude-mem</code>"
+        }
+      ]
+    },
+    {
+      "id": "mcp-servers",
+      "title": "MCP Servers",
+      "order": 7,
+      "entries": [
+        {
+          "id": "mcp-notion",
+          "name": "Notion MCP",
+          "version": "latest",
+          "links": [
+            { "label": "Repo", "url": "https://github.com/makenotion/notion-mcp-server" }
+          ],
+          "notes": "Official Notion MCP server. Connects Claude Code to Airnest workspace via bot \"Cloude Connection Luis\". Run via Claude Code settings: <code>npx @notionhq/notion-mcp-server</code>. Set <code>NOTION_API_KEY</code> env var."
+        },
+        {
+          "id": "mcp-guesty",
+          "name": "Guesty MCP",
+          "version": "custom",
+          "links": [],
+          "notes": "Custom local stdio MCP server for Guesty property management. Located at <code>guesty-mcp/index.js</code> in the AI Coworking folder. Exposes 10 tools for listings, reservations, calendars, guests."
+        },
+        {
+          "id": "mcp-canva",
+          "name": "Canva MCP",
+          "version": "latest",
+          "links": [
+            { "label": "Developers", "url": "https://www.canva.com/developers" }
+          ],
+          "notes": "Canva design integration — create, edit, export designs from Claude Code. Available via claude.ai MCP integration settings."
+        },
+        {
+          "id": "mcp-gdrive",
+          "name": "Google Drive MCP",
+          "version": "latest",
+          "links": [],
+          "notes": "Google Drive file access from Claude Code. Available via claude.ai MCP integration settings. Authenticate with <code>mcp__claude_ai_Google_Drive__authenticate</code>."
+        }
+      ]
+    },
+    {
+      "id": "browser-auto",
+      "title": "Browser Automation",
+      "order": 8,
+      "entries": [
+        {
+          "id": "playwriter",
+          "name": "Playwriter CLI",
+          "version": "latest",
+          "links": [],
+          "notes": "Controls your real Chrome browser via Playwright from Claude Code. Hook-driven: start a task with <code>acquirePage()</code>, then use <code>state.page</code>. Ask Luis for exact install command."
+        },
+        {
+          "id": "pw-demux",
+          "name": "pw-demux hooks",
+          "version": "latest",
+          "links": [],
+          "notes": "Custom hook system at <code>~/tools/pw/hooks/</code>. Three hooks: SessionStart (bootstrap), PreToolUse (inject ownership prelude), PostToolUse (cleanup). Diagnose: <code>bash ~/tools/pw/hooks/doctor.sh</code>"
+        }
+      ]
+    },
+    {
+      "id": "email",
+      "title": "Email",
+      "order": 9,
+      "entries": [
+        {
+          "id": "himalaya",
+          "name": "Himalaya",
+          "version": "latest",
+          "links": [
+            { "label": "Repo", "url": "https://github.com/soywod/himalaya" }
+          ],
+          "notes": "Terminal email client (IMAP/SMTP). Two GMX accounts configured. Install: <code>brew install himalaya</code>. Config at <code>~/.config/himalaya/config.toml</code>."
+        }
+      ]
+    },
+    {
+      "id": "remote-access",
+      "title": "Remote Access",
+      "order": 10,
+      "entries": [
+        {
+          "id": "tailscale",
+          "name": "Tailscale",
+          "version": "latest",
+          "links": [
+            { "label": "Site", "url": "https://tailscale.com" },
+            { "label": "KB", "url": "https://tailscale.com/kb" }
+          ],
+          "notes": "Zero-config VPN mesh network. Access any machine in your Tailnet by hostname. Install: <code>brew install --cask tailscale</code>"
+        },
+        {
+          "id": "nomachine",
+          "name": "NoMachine",
+          "version": "latest",
+          "links": [
+            { "label": "Site", "url": "https://www.nomachine.com" }
+          ],
+          "notes": "High-performance remote desktop (NX protocol). Works over Tailscale. Install: <code>brew install --cask nomachine</code>"
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "lastUpdated": "2026-05-01",
+    "owner": "Luis"
+  }
+}
+</script>
+
+<!-- =============================================
+     HEADER
+============================================= -->
+<header id="app-header">
+  <div class="header-left">
+    <div>
+      <div class="site-title">AI Supastack</div>
+      <div class="site-subtitle">Luis's AI build — step-by-step setup for a fresh machine</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="header-meta" id="header-date"></span>
+    <button class="btn-login" onclick="alert('GitHub login coming in next task — authentication not yet wired up.')" title="Login with GitHub (coming soon)">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+          0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
+          -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87
+          2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95
+          0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82
+          .64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82
+          .44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15
+          0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
+          0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+      </svg>
+      Login with GitHub
+    </button>
+  </div>
+</header>
+
+<!-- =============================================
+     MOBILE NAV (shown on < 768px)
+============================================= -->
+<div id="mobile-nav">
+  <span id="mobile-nav-label">Jump to section</span>
+  <select id="mobile-select" onchange="location.hash = '#section-' + this.value">
+    <option value="">— choose section —</option>
+  </select>
+</div>
+
+<!-- =============================================
+     LAYOUT: SIDEBAR + MAIN
+============================================= -->
+<div id="layout">
+  <nav id="sidebar" aria-label="Table of contents">
+    <div class="sidebar-heading">Installation Order</div>
+    <ul class="toc-list" id="toc-list"></ul>
+  </nav>
+
+  <main id="main" id="content">
+    <!-- Sections rendered by JS -->
+  </main>
+</div>
+
+<!-- =============================================
+     FOOTER
+============================================= -->
+<footer id="app-footer">
+  <span id="footer-meta"></span>
+  <a href="https://github.com/CammanderWi11/ai-supastack" target="_blank" rel="noopener">
+    View on GitHub →
+  </a>
+</footer>
+
+<!-- =============================================
+     RENDER SCRIPT
+============================================= -->
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- Parse data ---------- */
+  const raw = document.getElementById('stack-data').textContent;
+  const data = JSON.parse(raw);
+  const { sections, meta } = data;
+
+  /* ---------- Header + Footer dates ---------- */
+  document.getElementById('header-date').textContent = 'Updated: ' + meta.lastUpdated;
+  document.getElementById('footer-meta').textContent =
+    'Last updated: ' + meta.lastUpdated + ' · Maintained by ' + meta.owner;
+
+  /* ---------- Helpers ---------- */
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function renderLinks(links) {
+    if (!links || links.length === 0) return '<span style="color:var(--text-muted);font-size:12px;">—</span>';
+    return '<div class="link-badges">' +
+      links.map(l =>
+        `<a class="link-badge" href="${escHtml(l.url)}" target="_blank" rel="noopener">${escHtml(l.label)}</a>`
+      ).join('') +
+      '</div>';
+  }
+
+  function renderNotes(notes) {
+    if (!notes) return '<span style="color:var(--text-muted);font-size:12px;">—</span>';
+    // notes may contain <code> tags — we allow them through (data is trusted)
+    return `<details class="notes-details">
+      <summary>notes</summary>
+      <div class="notes-content">${notes}</div>
+    </details>`;
+  }
+
+  function renderEntry(entry, sectionId, idx) {
+    const entryId = `${sectionId}-${idx}`;
+    return `<tr class="entry-row" id="${escHtml(entryId)}">
+      <td>
+        <div class="entry-name">${escHtml(entry.name)}</div>
+        ${entry.version ? `<div class="entry-version">${escHtml(entry.version)}</div>` : ''}
+      </td>
+      <td class="links-cell">${renderLinks(entry.links)}</td>
+      <td class="notes-cell">${renderNotes(entry.notes)}</td>
+    </tr>`;
+  }
+
+  function renderSection(section) {
+    const entriesHtml = section.entries.map((e, i) => renderEntry(e, section.id, i)).join('');
+    return `
+      <section class="stack-section" id="section-${escHtml(section.id)}">
+        <div class="section-header">
+          <span class="section-order">${section.order}</span>
+          <h2 class="section-title">${escHtml(section.title)}</h2>
+        </div>
+        <table class="entries-table">
+          <thead>
+            <tr>
+              <th style="width:180px">Tool</th>
+              <th>Links</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>${entriesHtml}</tbody>
+        </table>
+      </section>`;
+  }
+
+  /* ---------- Build TOC ---------- */
+  const tocList = document.getElementById('toc-list');
+  const mobileSelect = document.getElementById('mobile-select');
+
+  sections.forEach(section => {
+    // Sidebar TOC item
+    const li = document.createElement('li');
+    li.className = 'toc-item';
+    li.dataset.id = section.id;
+    li.innerHTML = `<a href="#section-${escHtml(section.id)}">
+      <span class="toc-num">${section.order}</span>
+      ${escHtml(section.title)}
+    </a>`;
+    tocList.appendChild(li);
+
+    // Mobile select option
+    const opt = document.createElement('option');
+    opt.value = section.id;
+    opt.textContent = section.order + '. ' + section.title;
+    mobileSelect.appendChild(opt);
+  });
+
+  /* ---------- Build main content ---------- */
+  const main = document.getElementById('main');
+  main.innerHTML = sections.map(renderSection).join('');
+
+  /* ---------- Active TOC highlighting (Intersection Observer) ---------- */
+  const sectionEls = Array.from(document.querySelectorAll('.stack-section'));
+  const tocLinks = Array.from(document.querySelectorAll('.toc-item a'));
+  const tocItemMap = {};
+  tocLinks.forEach(a => {
+    const id = a.getAttribute('href').replace('#section-', '');
+    tocItemMap[id] = a;
+  });
+
+  let activeId = null;
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id.replace('section-', '');
+        if (id !== activeId) {
+          if (activeId && tocItemMap[activeId]) tocItemMap[activeId].classList.remove('active');
+          activeId = id;
+          if (tocItemMap[id]) tocItemMap[id].classList.add('active');
+        }
+      }
+    });
+  }, {
+    rootMargin: '-10% 0px -60% 0px',
+    threshold: 0
+  });
+
+  sectionEls.forEach(el => io.observe(el));
+
+})();
+</script>
+
+</body>
+</html>
